@@ -5,15 +5,19 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.loopers.support.error.CoreException
 import com.loopers.support.error.ErrorType
+import com.loopers.support.error.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.MissingRequestHeaderException
 import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ServerWebInputException
 import org.springframework.web.servlet.resource.NoResourceFoundException
+import kotlin.collections.isNotEmpty
 import kotlin.collections.joinToString
 import kotlin.jvm.java
 import kotlin.text.isNotEmpty
@@ -27,6 +31,49 @@ class ApiControllerAdvice {
     fun handle(e: CoreException): ResponseEntity<ApiResponse<*>> {
         log.warn("CoreException : {}", e.customMessage ?: e.message, e)
         return failureResponse(errorType = e.errorType, errorMessage = e.customMessage)
+    }
+
+    @ExceptionHandler
+    fun handleBadRequest(e: IllegalArgumentException): ResponseEntity<ApiResponse<*>> {
+        log.warn("IllegalArgumentException : {}", e.message, e)
+        return failureResponse(errorType = ErrorType.BAD_REQUEST, errorMessage = e.message)
+    }
+
+    @ExceptionHandler
+    fun handleConflict(e: IllegalStateException): ResponseEntity<ApiResponse<*>> {
+        log.warn("IllegalStateException : {}", e.message, e)
+        return failureResponse(errorType = ErrorType.CONFLICT, errorMessage = e.message)
+    }
+
+    @ExceptionHandler
+    fun handleNotFound(e: NotFoundException): ResponseEntity<ApiResponse<*>> {
+        log.warn("NotFoundException : {}", e.message, e)
+        return failureResponse(errorType = ErrorType.NOT_FOUND, errorMessage = e.message)
+    }
+
+    @ExceptionHandler
+    fun handleBadRequest(e: MethodArgumentNotValidException): ResponseEntity<ApiResponse<*>> {
+        val bindingResult = e.bindingResult
+        val fieldErrors = bindingResult.fieldErrors
+
+        val message = when {
+            fieldErrors.isNotEmpty() -> {
+                val firstError = fieldErrors[0]
+                val name = firstError.field
+                val value = firstError.rejectedValue
+                "요청 파라미터 '$name' 값 '$value'이(가) 잘못되었습니다."
+            }
+            else -> "요청 파라미터가 잘못되었습니다."
+        }
+
+        return failureResponse(errorType = ErrorType.BAD_REQUEST, errorMessage = message)
+    }
+
+    @ExceptionHandler
+    fun handleBadRequest(e: MissingRequestHeaderException): ResponseEntity<ApiResponse<*>> {
+        val headerName = e.headerName
+        val message = "필수 요청 헤더 '$headerName'가 누락되었습니다."
+        return failureResponse(errorType = ErrorType.BAD_REQUEST, errorMessage = message)
     }
 
     @ExceptionHandler

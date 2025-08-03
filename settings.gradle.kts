@@ -6,6 +6,7 @@ include(
     ":supports:jackson",
     ":supports:logging",
     ":supports:monitoring",
+    ":supports:snowflake",
 )
 
 // configurations

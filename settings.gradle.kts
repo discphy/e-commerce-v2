@@ -1,7 +1,7 @@
 rootProject.name = "e-commerce"
 
 include(
-    ":apps:commerce-api",
+    ":apps:user-api",
     ":modules:jpa",
     ":modules:kafka",
     ":modules:redis",

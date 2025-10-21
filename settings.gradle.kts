@@ -3,6 +3,9 @@ rootProject.name = "e-commerce"
 include(
     ":apps:commerce-api",
     ":modules:jpa",
+    ":modules:kafka",
+    ":modules:redis",
+    ":modules:resilience4j",
     ":supports:jackson",
     ":supports:logging",
     ":supports:monitoring",

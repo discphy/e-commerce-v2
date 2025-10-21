@@ -1,0 +1,42 @@
+resilience4j:
+  circuitbreaker:
+    configs.default:
+      sliding-window-size: 4                           # 최근 10번 호출 기준으로 통계 계산
+      failure-rate-threshold: 50                        # 실패율이 50% 이상이면 서킷 오픈(Open)
+      wait-duration-in-open-state: 2s                  # 서킷이 Open 상태일 때 유지되는 시간 (10초 후 Half-Open으로 전환)
+      permitted-number-of-calls-in-half-open-state: 2   # Half-Open 상태에서 허용되는 테스트 호출 수
+      slow-call-duration-threshold: 2s                  # 2초 이상 걸리면 "느린 호출(Slow call)"로 간주
+      slow-call-rate-threshold: 50                      # 느린 호출 비율이 50% 이상이면 실패로 간주 → 서킷 오픈 트리거
+  retry:
+    configs.default:
+      paymentRetry:
+        max-attempts: 3                             # 최대 재시도 횟수 (최초 1회 + 재시도 2회 = 총 3회 호출)
+        wait-duration: 1s                           # 재시도 간 대기 시간 (1초 간격으로 재시도)
+        fail-after-max-attempts: true               # 최대 재시도 후에도 실패 시 예외를 그대로 던짐 (fallback 호출 트리거 가능)
+        enable-exponential-backoff: true            # 재시도 간격을 점차 늘리는 지수 백오프(Exponential Backoff) 활성화
+        exponential-backoff-multiplier: 2           # 백오프 배율 (1초 → 2초 → 4초 ... 식으로 증가)
+        enable-randomized-wait: true                # 랜덤 지연(Randomized Wait) 활성화 → 스파이크(집중 요청) 방지
+        randomized-wait-factor: 0.5                 # 대기 시간의 ±50% 범위 내에서 랜덤하게 변동 (예: 1초 ± 0.5초)
+  timelimiter:
+    configs.default:
+      timeout-duration: 300ms # 전체 작업 시간 (read-timeout보다 길게 설정하는 걸 권장)
+      cancel-running-future: true
+      shared:
+        timeout-duration: 1s
+        cancel-running-future: true
+
+---
+
+spring.config.activate.on-profile: local, test
+
+---
+
+spring.config.activate.on-profile: dev
+
+---
+
+spring.config.activate.on-profile: qa
+
+---
+
+spring.config.activate.on-profile: prd

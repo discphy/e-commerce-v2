@@ -4,8 +4,8 @@ import com.loopers.domain.user.UserCommand
 import com.loopers.domain.user.UserInfo
 import com.loopers.interfaces.api.user.UserV1Dto.Gender.F
 import com.loopers.interfaces.api.user.UserV1Dto.Gender.M
+import com.loopers.support.error.CoreErrorType.BAD_REQUEST
 import com.loopers.support.error.CoreException
-import com.loopers.support.error.ErrorType
 import jakarta.validation.constraints.NotBlank
 import java.time.format.DateTimeFormatter
 
@@ -27,7 +27,7 @@ class UserV1Dto {
                 gender = when(gender) {
                     "M" -> UserCommand.Gender.M
                     "F" -> UserCommand.Gender.F
-                    else -> throw CoreException(ErrorType.BAD_REQUEST, "성별을 찾을 수 없습니다.")
+                    else -> throw CoreException(BAD_REQUEST, "성별을 찾을 수 없습니다.")
                 },
             )
         }
